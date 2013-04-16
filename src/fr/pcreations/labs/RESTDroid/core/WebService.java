@@ -396,9 +396,12 @@ public abstract class WebService implements RestResultReceiver.Receiver{
 	 */
 	@Override
 	public void onReceiveResult(int resultCode, Bundle resultData) {
+		
 		RESTRequest<?> r = (RESTRequest<?>) resultData.getSerializable(RestService.REQUEST_KEY);
-		for(Iterator<RESTRequest<?>> it = mRequestCollection.iterator(); it.hasNext();) {
+		List<RESTRequest<? extends ResourceRepresentation<?>>>  toRemove = new ArrayList<RESTRequest<?>>();
+		for(Iterator<RESTRequest<?>> it = mRequestCollection.iterator(); it.hasNext();) {			
 			RESTRequest<?> request = it.next();
+			Log.d("RESTDroid", "onReceiveResult");
 			if(request.getID().equals(r.getID())) {
 				try {
 					request.setResultStream(r.getResultStream());
@@ -411,12 +414,16 @@ public abstract class WebService implements RestResultReceiver.Receiver{
 				if(resultCode >= 200 && resultCode <= 210) {
 					request.setResourceRepresentation(r.getResourceRepresentation());
 					if(request.triggerOnFinishedRequestListeners())
-						it.remove();
+						//it.remove();
+						toRemove.add(request);
+						Log.d("RESTDroid", "remove");
 				}
 				else {
 					request.setResourceRepresentation(r.getResourceRepresentation());
 					if(request.triggerOnFailedRequestListeners())
-						it.remove();
+						//it.remove();
+						toRemove.add(request);
+						Log.d("RESTDroid", "remove");
 				}
 				
 				Intent i = resultData.getParcelable(RestService.INTENT_KEY);
@@ -425,6 +432,8 @@ public abstract class WebService implements RestResultReceiver.Receiver{
 				mContext.stopService(i);
 			}
 		}
+		Log.d("RESTDroid", "removeAll");
+		//mRequestCollection.removeAll(toRemove);
 		/*if(resultCode >= 200 && resultCode <= 210)
 			retryFailedRequest();*/
 	}
